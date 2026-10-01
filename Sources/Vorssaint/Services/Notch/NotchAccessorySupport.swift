@@ -23,6 +23,7 @@ enum NotchAccessorySupport {
             if model.contains("airpods pro") { return "airpodspro" }
             if model.contains("airpods") { return "airpods" }
             return "headphones"
+        case .microphone: return "mic"
         case .keyboard: return "keyboard"
         case .mouse: return "computermouse"
         case .trackpad: return "rectangle.and.hand.point.up.left"

@@ -293,6 +293,7 @@ struct PowerSection: View {
         case .mouse: return "computermouse"
         case .trackpad: return "rectangle.and.hand.point.up.left"
         case .audio: return "headphones"
+        case .microphone: return "mic"
         case .device: return "battery.100"
         }
     }

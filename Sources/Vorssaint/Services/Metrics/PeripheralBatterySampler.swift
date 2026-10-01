@@ -14,10 +14,12 @@ final class PeripheralBatterySampler {
     private let lock = NSLock()
     private let bluetoothQueue: DispatchQueue
     private let readFast: () -> [PeripheralBatteryDevice]
+    private let readReceivers: () -> [PeripheralBatteryDevice]
     private let readProfiler: (BoundedProcessCancellation) -> Data
     private let makeBluetoothRead: (DispatchQueue, BoundedProcessCancellation, @escaping ([BluetoothBatteryReading]) -> Void) -> PeripheralBluetoothReading
     private let currentTime: () -> TimeInterval
     private var enabled = false
+    private var receiversEnabled = false
     private var generation = UUID()
     private var cached = PeripheralBatterySample()
     private var cachedAt: TimeInterval = -.greatestFiniteMagnitude
@@ -33,6 +35,7 @@ final class PeripheralBatterySampler {
 
     init(bluetoothQueue: DispatchQueue = DispatchQueue(label: "com.vorssaint.peripheral-battery.bluetooth", qos: .utility),
          readFast: @escaping () -> [PeripheralBatteryDevice] = PeripheralBatterySampler.readFastDevices,
+         readReceivers: @escaping () -> [PeripheralBatteryDevice] = ReceiverBatteryReader.readDevices,
          readProfiler: @escaping (BoundedProcessCancellation) -> Data = PeripheralBatterySampler.readBluetoothSystemProfilerData,
          makeBluetoothRead: @escaping (DispatchQueue, BoundedProcessCancellation, @escaping ([BluetoothBatteryReading]) -> Void) -> PeripheralBluetoothReading = {
              BluetoothBatteryRead(queue: $0, cancellation: $1, completion: $2)
@@ -40,6 +43,7 @@ final class PeripheralBatterySampler {
          currentTime: @escaping () -> TimeInterval = { ProcessInfo.processInfo.systemUptime }) {
         self.bluetoothQueue = bluetoothQueue
         self.readFast = readFast
+        self.readReceivers = readReceivers
         self.readProfiler = readProfiler
         self.makeBluetoothRead = makeBluetoothRead
         self.currentTime = currentTime
@@ -69,6 +73,15 @@ final class PeripheralBatterySampler {
         oldRequest?.cancel()
     }
 
+    /// Vendor receivers are only asked while their hub feature is installed.
+    func setReceiversEnabled(_ enabled: Bool) {
+        lock.lock()
+        defer { lock.unlock() }
+        guard receiversEnabled != enabled else { return }
+        receiversEnabled = enabled
+        cachedAt = -.greatestFiniteMagnitude
+    }
+
     func sample(now: TimeInterval) -> PeripheralBatterySample {
         lock.lock()
         guard enabled else { lock.unlock(); return PeripheralBatterySample() }
@@ -85,9 +98,10 @@ final class PeripheralBatterySampler {
         }
         let bluetoothDevices = cachedBluetoothDevices
         let bluetoothTime = bluetoothObservedAt
+        let includeReceivers = receiversEnabled
         lock.unlock()
 
-        let fastDevices = readFast()
+        let fastDevices = readFast() + (includeReceivers ? readReceivers() : [])
         let devices = Self.uniqueDevices(from: fastDevices + bluetoothDevices)
         var observedAt = Dictionary(fastDevices.map { ($0.id, now) }, uniquingKeysWith: { max($0, $1) })
         for device in bluetoothDevices { observedAt[device.id] = bluetoothTime }

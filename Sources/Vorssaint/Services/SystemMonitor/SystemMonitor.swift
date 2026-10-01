@@ -587,6 +587,8 @@ final class SystemMonitor: ObservableObject {
     }
 
     private func syncPeripheralBatterySampling() {
+        peripheralBatterySampler.setReceiversEnabled(
+            UserDefaults.standard.bool(forKey: AppFeature.usbReceivers.availabilityKey))
         peripheralBatterySampler.setEnabled(shouldRun && currentPlan(defaults: .standard).needPeripheralBattery)
     }
 

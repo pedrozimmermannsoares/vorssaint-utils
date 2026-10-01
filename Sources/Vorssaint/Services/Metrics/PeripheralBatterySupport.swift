@@ -4,7 +4,7 @@
 import Foundation
 
 enum PeripheralBatteryKind: String, Comparable {
-    case keyboard, mouse, trackpad, audio, device
+    case keyboard, mouse, trackpad, audio, microphone, device
 
     var menuLabel: String {
         switch self {
@@ -12,6 +12,7 @@ enum PeripheralBatteryKind: String, Comparable {
         case .mouse: return "MOU"
         case .trackpad: return "TRK"
         case .audio: return "AUD"
+        case .microphone: return "MIC"
         case .device: return "PER"
         }
     }

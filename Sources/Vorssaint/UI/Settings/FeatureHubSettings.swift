@@ -1061,6 +1061,7 @@ extension AppFeature {
         case .monitorDisk: return s.diskSection
         case .monitorPower: return s.powerSection
         case .connectedDevices: return FeatureStrings.connectedDevices(L10n.shared.language).title
+        case .usbReceivers: return FeatureStrings.usbReceivers(L10n.shared.language).title
         case .fanControl: return FeatureStrings.fanControl(L10n.shared.language).title
         }
     }
@@ -1148,6 +1149,7 @@ extension AppFeature {
         case .monitorDisk: return hub.descMonitorDisk
         case .monitorPower: return hub.descMonitorPower
         case .connectedDevices: return FeatureStrings.connectedDevices(L10n.shared.language).hubDescription
+        case .usbReceivers: return FeatureStrings.usbReceivers(L10n.shared.language).hubDescription
         case .fanControl: return FeatureStrings.fanControl(L10n.shared.language).hubDescription
         }
     }
